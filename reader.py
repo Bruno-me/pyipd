@@ -1,23 +1,23 @@
 #!/bin/env python
 
 import sys
+import struct
 
-file = sys.argv[1]
+filename = sys.argv[1]
+file = open(filename, "rb")
 
-file = open(file, "rb")
+#data begins 0x28 bytes in
+file.seek(0x28)
 
-#find number of databases
-file.seek(39)
-numdb = ord(file.read(1))
-numdb = numdb + ord(file.read(1))
+#figure out the number of databases
+numdb = struct.unpack('h', file.read(2))[0]
+print numdb, "databases found"
 
-file.seek(file.tell() + 1)
-
-databases = []
+databases = {}
 
 #find database names
 for i in range(0,numdb):
-	namelen = ord(file.read(1)) + ord(file.read(1))
-	databases += [[i, file.read(namelen)[:-1]],]
+	namelen = struct.unpack("h", file.read(2))
+	databases[i] = file.read(namelen[0])[:-1]
 
 print databases

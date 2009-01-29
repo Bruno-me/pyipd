@@ -8,6 +8,12 @@ import time
 def find_key(dic, val):
 	return [k for k, v in dic.iteritems() if v == val][0]
 
+def print_hex(str):
+	hexd = ''
+	for char in str:
+		hexd += "%#x " % ord(char)
+	return hexd
+
 filename = sys.argv[1]
 file = open(filename, "rb")
 filesize = os.path.getsize(filename)
@@ -45,28 +51,42 @@ while file.tell() < (filesize - 1):
 		field['type'] = struct.unpack("b", file.read(1))[0]
 		field['data'] = file.read(flength)
 		record['fields'] += ((field),)
-		if record['dbid'] == find_key(databases, 'SMS Messages') and field['type'] == 1:
-			received = 0
-			sent = 0
-			for i in range(13, 20):
-				temp = ord(field['data'][i])
-				received += temp << ((i - 13) * 8)
-			for i in range(21, 28):
-				temp = ord(field['data'][i])
-				#print 'Temp:	', temp
-				sent += temp << ((i - 21) * 8)
-			received = int(str(received)[:-3])
-			sent = int(str(sent)[:-3])
-			print 'received:	', time.ctime(received)
-			print 'sent:		', time.ctime(sent)
-		if record['dbid'] == find_key(databases, 'SMS Messages') and field['type'] == 4:
-			print 'text:		', field['data']
+
+		#handle SMS messages
+		if record['dbid'] == find_key(databases, 'SMS Messages'):
+			#date field, unix timestamp
+			if field['type'] == 1:
+				received = 0
+				sent = 0
+				for i in range(13, 20):
+					received += ord(field['data'][i]) << ((i - 13) * 8)
+				for i in range(21, 28):
+					sent += ord(field['data'][i]) << ((i - 21) * 8)
+				#this is really horrible, but for some reason everything is shifted 3 decimals to the left
+				received = int(str(received)[:-3])
+				sent = int(str(sent)[:-3])
+				print 'received:	', time.ctime(received)
+				print 'sent:		', time.ctime(sent)
+			#contents of the message
+			if field['type'] == 4:
+				print 'text:		', field['data']
+			#phone number either sent to or received from
+			if field['type'] == 2:
+				print 'number:		', field['data']
+			#hack to figure out if it was sent or received
+			if field['type'] == 7:
+				if ord(field['data'][1]) == 0:
+					print 'direction:	out'
+				else:
+					print 'direction:	in'
 	records += ((record,))
 
 for record in records:
-	print databases[record['dbid']]
-	print " Handle:", record['handle']
-	print " UID:", record['uid']
-	for field in record['fields']:
-		print "	Type:", field['type']
-		print "	Data:", field['data']
+	if record['dbid'] == find_key(databases, 'SMS Messages'):
+		print databases[record['dbid']]
+		print " Handle:", record['handle']
+		print " UID:", record['uid']
+		for field in record['fields']:
+			print "	Type:", field['type']
+			print "	Data:", field['data']
+			print "		Hex:", print_hex(field['data'])

@@ -23,7 +23,6 @@ file.seek(0x28)
 
 #figure out the number of databases
 numdb = struct.unpack('h', file.read(2))[0]
-#print numdb, "databases found"
 
 databases = {}
 
@@ -35,7 +34,10 @@ for i in range(0,numdb):
 print databases
 
 records = ()
+SMSs = ()
+Calls = ()
 
+#Go the the file stopping at each record
 while file.tell() < (filesize - 1):
 	record = {}
 	record['dbid'] = struct.unpack("H", file.read(2))[0]
@@ -45,6 +47,10 @@ while file.tell() < (filesize - 1):
 	record['handle'] = struct.unpack("H", file.read(2))[0]
 	record['uid'] = struct.unpack("L", file.read(4))[0]
 	record['fields'] = ()
+	if record['dbid'] == find_key(databases, 'SMS Messages'):
+		SMS = {'uid': record['uid'], 'handle': record['handle'], 'sent': 0, 'received': 0, 'text': '', 'number': '', 'direction': ''}
+	if record['dbid'] == find_key(databases, 'Phone Call Logs'):
+		Call = {'uid': record['uid'], 'handle': record['handle'], 'time': 0, 'number': '', 'name': '', 'names': []}
 	while file.tell() < (temptell + rlength) and file.tell() < filesize:
 		field = {}
 		flength = struct.unpack("H", file.read(2))[0]
@@ -65,28 +71,70 @@ while file.tell() < (filesize - 1):
 				#this is really horrible, but for some reason everything is shifted 3 decimals to the left
 				received = int(str(received)[:-3])
 				sent = int(str(sent)[:-3])
-				print 'received:	', time.ctime(received)
-				print 'sent:		', time.ctime(sent)
+				SMS['recieved'] = received
+				SMS['sent'] = sent
 			#contents of the message
-			if field['type'] == 4:
-				print 'text:		', field['data']
+			elif field['type'] == 4:
+				SMS['text'] = field['data'].strip()
 			#phone number either sent to or received from
-			if field['type'] == 2:
-				print 'number:		', field['data']
+			elif field['type'] == 2:
+				SMS['number'] = field['data'].strip()
 			#hack to figure out if it was sent or received
-			if field['type'] == 7:
+			elif field['type'] == 7:
 				if ord(field['data'][1]) == 0:
-					print 'direction:	out'
+					SMS['direction'] = 'out'
 				else:
-					print 'direction:	in'
-	records += ((record,))
+					SMS['direction'] = 'in'
+		if record['dbid'] == find_key(databases, 'Phone Call Logs'):
+			#timestamp, similar to SMS
+			if field['type'] == 4:
+				calltime = struct.unpack('Q', field['data'])[0]
+				Call['time'] = int(str(calltime)[:-3])
+			#phone number
+			if field['type'] == 12:
+				Call['number'] = field['data'][:-1]
+			#name from address book
+			if field['type'] == 31:
+				Call['names'] += [field['data'][:-1],]
+	records += (record,)
+	if 'SMS' in globals():
+		SMS['uid'] = record['uid']
+		SMS['handle'] = record['handle']
+		SMSs += (SMS,)
+		del SMS
+	if 'Call' in globals():
+		Call['uid'] = record['uid']
+		Call['handle'] = record['handle']
+		if not Call['number']:
+			Call['number'] = 'restricted'
+		Call['name'] = ' '.join(Call['names'])
+		Calls += (Call,)
+		del Call
 
-for record in records:
-	if record['dbid'] == find_key(databases, 'SMS Messages'):
-		print databases[record['dbid']]
-		print " Handle:", record['handle']
-		print " UID:", record['uid']
-		for field in record['fields']:
-			print "	Type:", field['type']
-			print "	Data:", field['data']
-			print "		Hex:", print_hex(field['data'])
+#for record in records:
+#	if record['dbid'] == find_key(databases, 'Phone Call Logs'):
+#		print databases[record['dbid']]
+#		print " Handle:", record['handle']
+#		print " UID:", record['uid']
+#		for field in record['fields']:
+#			print "	Type:", field['type']
+#			print "	Data:", field['data']
+#			if field['type'] == 4:
+#				print struct.unpack('Q', field['data'])[0]
+#			print "		Hex:", print_hex(field['data'])
+
+for SMS in SMSs:
+	print SMS['handle'], '-', SMS['uid']
+	print '	Direction:', SMS['direction']
+	if SMS['direction'] == 'out':
+		print '	To:', SMS['number']
+	else:
+		print '	From:', SMS['number']
+	print '	Sent:', time.ctime(SMS['sent'])
+	print '	Text:', SMS['text']
+
+for Call in Calls:
+	print Call['handle'], '-', Call['uid']
+	print '	Date and Time:		', time.ctime(Call['time'])
+	print '	Number:			', Call['number']
+	print '	Address Book Name:	', Call['name']

@@ -50,7 +50,7 @@ while file.tell() < (filesize - 1):
 	if record['dbid'] == find_key(databases, 'SMS Messages'):
 		SMS = {'uid': record['uid'], 'handle': record['handle'], 'sent': 0, 'received': 0, 'text': '', 'number': '', 'direction': ''}
 	if record['dbid'] == find_key(databases, 'Phone Call Logs'):
-		Call = {'uid': record['uid'], 'handle': record['handle'], 'time': 0, 'number': '', 'name': '', 'names': [], 'direction': ''}
+		Call = {'uid': record['uid'], 'handle': record['handle'], 'time': 0, 'number': '', 'name': '', 'names': [], 'direction': '', 'duration': 0}
 	while file.tell() < (temptell + rlength) and file.tell() < filesize:
 		field = {}
 		flength = struct.unpack("H", file.read(2))[0]
@@ -74,13 +74,13 @@ while file.tell() < (filesize - 1):
 				SMS['recieved'] = received
 				SMS['sent'] = sent
 			#contents of the message
-			elif field['type'] == 4:
+			if field['type'] == 4:
 				SMS['text'] = field['data'].strip("\x00\x03")
 			#phone number either sent to or received from
-			elif field['type'] == 2:
+			if field['type'] == 2:
 				SMS['number'] = field['data'].strip("\x00\x03")
 			#hack to figure out if it was sent or received
-			elif field['type'] == 7:
+			if field['type'] == 7:
 				if ord(field['data'][1]) == 0:
 					SMS['direction'] = 'out'
 				else:
@@ -96,7 +96,7 @@ while file.tell() < (filesize - 1):
 			#name from address book
 			if field['type'] == 31:
 				Call['names'] += [field['data'][:-1],]
-			#direction?
+			#direction
 			if field['type'] == 2:
 				direction = ord(field['data'][0])
 				if direction == 0:
@@ -111,6 +111,9 @@ while file.tell() < (filesize - 1):
 					Call['direction'] = 'conference'
 				else:
 					Call['direction'] = 'unknown - %d' % direction
+			#duration (in seconds)
+			if field['type'] == 3:
+				Call['duration'] = struct.unpack('L', field['data'])[0]
 	records += (record,)
 	if 'SMS' in globals():
 		SMS['uid'] = record['uid']
@@ -152,5 +155,6 @@ for Call in Calls:
 	print Call['handle'], '-', Call['uid']
 	print '	Date and Time:		', time.ctime(Call['time'])
 	print '	Direction (?):		', Call['direction']
+	print '	Duration:		', Call['duration']
 	print '	Number:			', Call['number']
 	print '	Address Book Name:	', Call['name']

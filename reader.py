@@ -50,7 +50,7 @@ while file.tell() < (filesize - 1):
 	if record['dbid'] == find_key(databases, 'SMS Messages'):
 		SMS = {'uid': record['uid'], 'handle': record['handle'], 'sent': 0, 'received': 0, 'text': '', 'number': '', 'direction': ''}
 	if record['dbid'] == find_key(databases, 'Phone Call Logs'):
-		Call = {'uid': record['uid'], 'handle': record['handle'], 'time': 0, 'number': '', 'name': '', 'names': [], 'direction': '', 'duration': 0}
+		Call = {'uid': record['uid'], 'handle': record['handle'], 'time': 0, 'number': '', 'name': '', 'names': [], 'direction': '', 'duration': 0, 'disposition': ''}
 	while file.tell() < (temptell + rlength) and file.tell() < filesize:
 		field = {}
 		flength = struct.unpack("H", file.read(2))[0]
@@ -114,6 +114,17 @@ while file.tell() < (filesize - 1):
 			#duration (in seconds)
 			if field['type'] == 3:
 				Call['duration'] = struct.unpack('L', field['data'])[0]
+			#failure code
+			if field['type'] == 6:
+				failcode = ord(field['data'][0])
+				if failcode == 0:
+					Call['disposition'] = 'Success'
+				elif failcode == 3:
+					Call['disposition'] = 'Radio Path Unavailable'
+				elif failcode == 9:
+					Call['disposition'] = 'Call Failed'
+				else:
+					Call['disposition'] = 'unknown - %d' % failcode
 	records += (record,)
 	if 'SMS' in globals():
 		SMS['uid'] = record['uid']
@@ -153,8 +164,9 @@ for SMS in SMSs:
 
 for Call in Calls:
 	print Call['handle'], '-', Call['uid']
-	print '	Date and Time:		', time.ctime(Call['time'])
-	print '	Direction (?):		', Call['direction']
-	print '	Duration:		', Call['duration']
-	print '	Number:			', Call['number']
-	print '	Address Book Name:	', Call['name']
+	print '	Date and Time:	', time.ctime(Call['time'])
+	print '	Direction:	', Call['direction']
+	print '	Disposition:	', Call['disposition']
+	print '	Duration:	', Call['duration']
+	print '	Number:		', Call['number']
+	print '	Name:		', Call['name']

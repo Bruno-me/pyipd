@@ -4,6 +4,7 @@ import sys
 import struct
 import os.path
 import time
+from models import addressbook
 
 def find_key(dic, val):
 	return [k for k, v in dic.iteritems() if v == val][0]
@@ -36,6 +37,7 @@ print databases
 records = ()
 SMSs = ()
 Calls = ()
+ABooks = []
 
 #Go the the file stopping at each record
 while file.tell() < (filesize - 1):
@@ -125,6 +127,9 @@ while file.tell() < (filesize - 1):
 					Call['disposition'] = 'Call Failed'
 				else:
 					Call['disposition'] = 'unknown - %d' % failcode
+		if record['dbid'] == find_key(databases, 'Address Book - All') and field['type'] == 10:
+			#luckily, this is the only field type we're concerned with
+			ABooks.append(addressbook.ABook(field['data'], record['uid'], record['handle']))
 	records += (record,)
 	if 'SMS' in globals():
 		SMS['uid'] = record['uid']

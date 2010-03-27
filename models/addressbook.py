@@ -75,5 +75,4 @@ class ABook:
 			data = self.data.read(length)[:-1]
 			if field in fieldtypes:
 				setattr(self, fieldtypes[field], data)
-				print fieldtypes[field], data
 			self.data.seek(1,1)

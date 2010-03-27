@@ -9,7 +9,7 @@ class SMS:
 		self.handle = handle
 		self.fields = fields
 		self.decode()
-	
+
 	def decode(self):
 		for field in self.fields:
 			if field['type'] == 1:

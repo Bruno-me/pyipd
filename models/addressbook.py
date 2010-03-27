@@ -68,11 +68,9 @@ class ABook:
 			self.last_name = ''
 		self.data.seek(1,1)
 
-		print self.first_name, self.last_name
 		while self.data.tell() < self.datalen - 1:
 			length = struct.unpack('H', self.data.read(2))[0]
 			field = ord(self.data.read(1))
 			data = self.data.read(length)[:-1]
 			if field in fieldtypes:
 				setattr(self, fieldtypes[field], data)
-			self.data.seek(1,1)

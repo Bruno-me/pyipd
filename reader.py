@@ -32,8 +32,6 @@ for i in range(0,numdb):
 	namelen = struct.unpack("h", file.read(2))
 	databases[i] = file.read(namelen[0])[:-1]
 
-print databases
-
 records = ()
 SMSs = []
 Calls = []

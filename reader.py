@@ -8,7 +8,7 @@ import sys
 import struct
 import os.path
 import time
-from progressbar import progressbar
+from optparse import OptionParser
 from models import addressbook, sms, phonecall
 
 def find_key(dic, val):
@@ -20,9 +20,19 @@ def print_hex(str):
 		hexd += "%#x " % ord(char)
 	return hexd
 
-filename = sys.argv[1]
+parser = OptionParser(usage='Usage: %prog [options] file')
+
+parser.add_option('-p', '--progress', action='store_true', dest='progress', help='Render a progress bar showing file position and current database')
+
+(options, args) = parser.parse_args()
+
+filename = args[0]
 file = open(filename, "rb")
 filesize = os.path.getsize(filename)
+
+if options.progress:
+	from progressbar import progressbar
+	pbar = progressbar.ProgressBar()
 
 #data begins 0x28 bytes in
 file.seek(0x28)
@@ -41,8 +51,6 @@ records = ()
 SMSs = []
 Calls = []
 ABooks = []
-
-pbar = progressbar.ProgressBar()
 
 #Go the the file stopping at each record
 while file.tell() < (filesize - 1):
@@ -75,5 +83,6 @@ while file.tell() < (filesize - 1):
 	if record['dbid'] == find_key(databases, 'SMS Messages'):
 		SMSs.append(sms.SMS(record['fields'], record['uid'], record['handle']))
 
-	#display a nifty progress bar!
-	pbar.render(int(file.tell() / filesize * 100), "\nDatabase: %s" % (databases[record['dbid']]))
+	#display a nifty progress bar, if they ask for it
+	if options.progress:
+		pbar.render(int(file.tell() / filesize * 100), "\nDatabase: %s" % (databases[record['dbid']]))

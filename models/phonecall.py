@@ -1,5 +1,8 @@
 """Handles Phone Call Logs"""
 
+#Copyright 2010, Logan Rojas
+#License: Simplified BSD
+
 import struct
 from datetime import datetime
 

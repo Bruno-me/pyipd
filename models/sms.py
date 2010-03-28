@@ -1,5 +1,8 @@
 """Handles SMS Text messages"""
 
+#Copyright 2010, Logan Rojas
+#License: Simplified BSD
+
 import struct
 from datetime import datetime
 

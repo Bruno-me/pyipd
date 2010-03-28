@@ -3,10 +3,12 @@
 #Copyright 2010, Logan Rojas
 #License: Simplified BSD
 
+from __future__ import division
 import sys
 import struct
 import os.path
 import time
+from optparse import OptionParser
 from models import addressbook, sms, phonecall
 
 def find_key(dic, val):
@@ -18,9 +20,19 @@ def print_hex(str):
 		hexd += "%#x " % ord(char)
 	return hexd
 
-filename = sys.argv[1]
+parser = OptionParser(usage='Usage: %prog [options] file')
+
+parser.add_option('-p', '--progress', action='store_true', dest='progress', help='Render a progress bar showing file position and current database')
+
+(options, args) = parser.parse_args()
+
+filename = args[0]
 file = open(filename, "rb")
 filesize = os.path.getsize(filename)
+
+if options.progress:
+	from progressbar import progressbar
+	pbar = progressbar.ProgressBar()
 
 #data begins 0x28 bytes in
 file.seek(0x28)
@@ -60,8 +72,17 @@ while file.tell() < (filesize - 1):
 		if record['dbid'] == find_key(databases, 'Address Book - All') and field['type'] == 10:
 			#luckily, this is the only field type we're concerned with
 			ABooks.append(addressbook.ABook(field['data'], record['uid'], record['handle']))
+
+	#orphaned records
+	if record['dbid'] == 65535:
+		continue
+
 	records += (record,)
 	if record['dbid'] == find_key(databases, 'Phone Call Logs'):
 		Calls.append(phonecall.Phonecall(record['fields'], record['uid'], record['handle']))
 	if record['dbid'] == find_key(databases, 'SMS Messages'):
 		SMSs.append(sms.SMS(record['fields'], record['uid'], record['handle']))
+
+	#display a nifty progress bar, if they ask for it
+	if options.progress:
+		pbar.render(int(file.tell() / filesize * 100), "\nDatabase: %s" % (databases[record['dbid']]))

@@ -1,5 +1,8 @@
 #!/bin/env python
 
+#Copyright 2010, Logan Rojas
+#License: Simplified BSD
+
 import sys
 import struct
 import os.path

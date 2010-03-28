@@ -1,5 +1,8 @@
 """Handles importing Address Book records"""
 
+#Copyright 2010, Logan Rojas
+#License: Simplified BSD
+
 import cStringIO
 import struct
 

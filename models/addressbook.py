@@ -40,6 +40,9 @@ fieldtypes = {
 	0x43: 'user_3',
 	0x44: 'user_4',
 	0x40: 'notes',
+	0x4d: 'picture',
+	0x64: 'facebook',
+	0x3b: 'categories',
 }		
 
 class ABook:

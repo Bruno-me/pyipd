@@ -43,7 +43,7 @@ fieldtypes = {
 	0x4d: 'picture',
 	0x64: 'facebook',
 	0x3b: 'categories',
-}		
+}
 
 class ABook:
 	def __init__(self, data, uid, handle):
@@ -52,8 +52,14 @@ class ABook:
 		self.data = cStringIO.StringIO(data)
 		self.datalen = len(data)
 		self.decode()
+
+	def __repr__(self):
+		return u'<ABook: "%s %s">' % (self.first_name, self.last_name)
 	
 	def decode(self):
+		"""Read through the data and extract the fields listed above, usually called in __init__()"""
+		#ensure the cursor is at the beginning of the data
+		self.data.seek(0)
 		#First name first
 		#length of first name, plus 0x20 at beginning
 		length = ord(self.data.read(1))
@@ -71,7 +77,14 @@ class ABook:
 		self.last_name = self.data.read(length).strip()
 		#when last name is empty it's 0xFF 7 times
 		if self.last_name == 'T' + (chr(0xff) * 7):
+			#blank lastname
 			self.last_name = ''
+		if self.last_name and self.last_name[0] == '7':
+			#for whatever reason when the first character of the last name is '7', the names are reversed
+			first_temp = self.first_name
+			self.first_name = self.last_name[1:]
+			self.last_name = first_temp
+
 		self.data.seek(1,1)
 
 		while self.data.tell() < self.datalen - 1:

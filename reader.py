@@ -58,7 +58,7 @@ while file.tell() < (filesize - 1):
 	record['dbid'] = struct.unpack("H", file.read(2))[0]
 	rlength = struct.unpack("L", file.read(4))[0]
 	temptell = file.tell()
-	file.seek(file.tell() + 1)
+	file.seek(1,1)
 	record['handle'] = struct.unpack("H", file.read(2))[0]
 	record['uid'] = struct.unpack("L", file.read(4))[0]
 	record['fields'] = ()

@@ -9,7 +9,7 @@ import struct
 import os.path
 import time
 from optparse import OptionParser
-from models import addressbook, sms, phonecall
+from models import addressbook, sms, phonecall, message
 
 def find_key(dic, val):
 	return [k for k, v in dic.iteritems() if v == val][0]
@@ -51,6 +51,7 @@ records = ()
 SMSs = []
 Calls = []
 ABooks = []
+Messages = []
 
 #Go the the file stopping at each record
 while file.tell() < (filesize - 1):
@@ -82,6 +83,8 @@ while file.tell() < (filesize - 1):
 		Calls.append(phonecall.Phonecall(record['fields'], record['uid'], record['handle']))
 	if record['dbid'] == find_key(databases, 'SMS Messages'):
 		SMSs.append(sms.SMS(record['fields'], record['uid'], record['handle']))
+	if record['dbid'] == find_key(databases, 'Messages'):
+		Messages.append(message.Message(record['fields'], record['uid'], record['handle']))
 
 	#display a nifty progress bar, if they ask for it
 	if options.progress:

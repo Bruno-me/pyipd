@@ -6,7 +6,7 @@
 import struct
 from datetime import datetime
 
-class SMS:
+class SMS(object):
 	def __init__(self, fields, uid, handle):
 		self.uid = uid
 		self.handle = handle

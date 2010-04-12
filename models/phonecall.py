@@ -6,7 +6,7 @@
 import struct
 from datetime import datetime
 
-class Phonecall:
+class Phonecall(object):
 	def __init__(self, fields, uid, handle):
 
 		self.uid = uid

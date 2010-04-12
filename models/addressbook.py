@@ -45,7 +45,7 @@ fieldtypes = {
 	0x3b: 'categories',
 }
 
-class ABook:
+class ABook(object):
 	def __init__(self, data, uid, handle):
 		self.uid = uid
 		self.handle = handle

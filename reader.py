@@ -8,7 +8,6 @@ import sys
 import struct
 import os.path
 import time
-from optparse import OptionParser
 from models import addressbook, sms, phonecall, message
 
 def find_key(dic, val):
@@ -23,22 +22,21 @@ def print_hex(str):
 		hexd += "%#x " % ord(char)
 	return hexd
 
-parser = OptionParser(usage='Usage: %prog [options] file')
-
-parser.add_option('-p', '--progress', action='store_true', dest='progress', help='Render a progress bar showing file position and current database')
-
-(options, args) = parser.parse_args()
 
 class Reader(object):
 	"""Makes a Reader object
 
-	whatever =Reader(<file object>)"""
+	whatever = Reader(<file object>, <progress bool>)
 
-	def __init__(self, file):
+	file is a file object, obviously
+	progress is a bool that tells it whether or not to draw a progress bar"""
+
+	def __init__(self, file, progress):
 		print 'Processing file:', file.name
+		self.filename = file.name
 		filesize = os.path.getsize(file.name)
 
-		if options.progress:
+		if progress:
 			from progressbar import progressbar
 			pbar = progressbar.ProgressBar()
 
@@ -95,5 +93,8 @@ class Reader(object):
 				self.Messages.append(message.Message(record['fields'], record['uid'], record['handle']))
 
 			#display a nifty progress bar, if they ask for it
-			if options.progress:
-				pbar.render(int(file.tell() / filesize * 100), "\nDatabase: %s" % (databases[record['dbid']]))
+			if progress:
+				pbar.render(int(file.tell() / filesize * 100), "\nDatabase: %s" % (self.databases[record['dbid']]))
+
+	def __repr__(self):
+		return '<Reader %s: "%s">' % (id(self), self.filename)

@@ -31,3 +31,14 @@ class SMS(object):
 					self.direction = 'out'
 				else:
 					self.direction = 'in'
+
+	def as_dict(self):
+		return {
+			'uid': self.uid,
+			'handle': self.handle,
+			'sent': self.sent,
+			'received': self.received,
+			'text': self.text,
+			'number': self.number,
+			'direction': self.direction,
+		}

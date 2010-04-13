@@ -11,6 +11,13 @@ import time
 from optparse import OptionParser
 from models import addressbook, sms, phonecall, message
 
+import pymongo
+
+conn = pymongo.Connection()
+db = conn.pyipd
+sms_collection = db.sms
+sms_collection.ensure_index('uid', unique=True, drop_dups=True)
+
 def find_key(dic, val):
 	return [k for k, v in dic.iteritems() if v == val][0]
 
@@ -89,3 +96,6 @@ while file.tell() < (filesize - 1):
 	#display a nifty progress bar, if they ask for it
 	if options.progress:
 		pbar.render(int(file.tell() / filesize * 100), "\nDatabase: %s" % (databases[record['dbid']]))
+
+for sms in SMSs:
+	sms_collection.insert(sms.as_dict())

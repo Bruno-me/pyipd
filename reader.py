@@ -26,66 +26,71 @@ parser.add_option('-p', '--progress', action='store_true', dest='progress', help
 
 (options, args) = parser.parse_args()
 
-filename = args[0]
-file = open(filename, "rb")
-filesize = os.path.getsize(filename)
+class Reader(object):
+	"""Makes a Reader object
 
-if options.progress:
-	from progressbar import progressbar
-	pbar = progressbar.ProgressBar()
+	whatever =Reader(<file object>)"""
 
-#data begins 0x28 bytes in
-file.seek(0x28)
+	def __init__(self, file):
+		print 'Processing file:', file.name
+		filesize = os.path.getsize(file.name)
 
-#figure out the number of databases
-numdb = struct.unpack('h', file.read(2))[0]
+		if options.progress:
+			from progressbar import progressbar
+			pbar = progressbar.ProgressBar()
 
-databases = {}
+		#data begins 0x28 bytes in
+		file.seek(0x28)
 
-#find database names
-for i in range(0,numdb):
-	namelen = struct.unpack("h", file.read(2))
-	databases[i] = file.read(namelen[0])[:-1]
+		#figure out the number of databases
+		numdb = struct.unpack('h', file.read(2))[0]
 
-records = ()
-SMSs = []
-Calls = []
-ABooks = []
-Messages = []
+		self.databases = {}
 
-#Go the the file stopping at each record
-while file.tell() < (filesize - 1):
-	record = {}
-	record['dbid'] = struct.unpack("H", file.read(2))[0]
-	rlength = struct.unpack("L", file.read(4))[0]
-	temptell = file.tell()
-	file.seek(1,1)
-	record['handle'] = struct.unpack("H", file.read(2))[0]
-	record['uid'] = struct.unpack("L", file.read(4))[0]
-	record['fields'] = ()
-	while file.tell() < (temptell + rlength) and file.tell() < filesize:
-		field = {}
-		flength = struct.unpack("H", file.read(2))[0]
-		field['type'] = struct.unpack("b", file.read(1))[0]
-		field['data'] = file.read(flength)
-		record['fields'] += ((field),)
+		#find database names
+		for i in range(0,numdb):
+			namelen = struct.unpack("h", file.read(2))
+			self.databases[i] = file.read(namelen[0])[:-1]
 
-		if record['dbid'] == find_key(databases, 'Address Book - All') and field['type'] == 10:
-			#luckily, this is the only field type we're concerned with
-			ABooks.append(addressbook.ABook(field['data'], record['uid'], record['handle']))
+		self.records = ()
+		self.SMSs = []
+		self.Calls = []
+		self.ABooks = []
+		self.Messages = []
 
-	#orphaned records
-	if record['dbid'] == 65535:
-		continue
+		#Go the the file stopping at each record
+		while file.tell() < (filesize - 1):
+			record = {}
+			record['dbid'] = struct.unpack("H", file.read(2))[0]
+			rlength = struct.unpack("L", file.read(4))[0]
+			temptell = file.tell()
+			file.seek(1,1)
+			record['handle'] = struct.unpack("H", file.read(2))[0]
+			record['uid'] = struct.unpack("L", file.read(4))[0]
+			record['fields'] = ()
+			while file.tell() < (temptell + rlength) and file.tell() < filesize:
+				field = {}
+				flength = struct.unpack("H", file.read(2))[0]
+				field['type'] = struct.unpack("b", file.read(1))[0]
+				field['data'] = file.read(flength)
+				record['fields'] += ((field),)
 
-	records += (record,)
-	if record['dbid'] == find_key(databases, 'Phone Call Logs'):
-		Calls.append(phonecall.Phonecall(record['fields'], record['uid'], record['handle']))
-	if record['dbid'] == find_key(databases, 'SMS Messages'):
-		SMSs.append(sms.SMS(record['fields'], record['uid'], record['handle']))
-	if record['dbid'] == find_key(databases, 'Messages'):
-		Messages.append(message.Message(record['fields'], record['uid'], record['handle']))
+				if record['dbid'] == find_key(self.databases, 'Address Book - All') and field['type'] == 10:
+					#luckily, this is the only field type we're concerned with
+					self.ABooks.append(addressbook.ABook(field['data'], record['uid'], record['handle']))
 
-	#display a nifty progress bar, if they ask for it
-	if options.progress:
-		pbar.render(int(file.tell() / filesize * 100), "\nDatabase: %s" % (databases[record['dbid']]))
+			#orphaned records
+			if record['dbid'] == 65535:
+				continue
+
+			self.records += (record,)
+			if record['dbid'] == find_key(self.databases, 'Phone Call Logs'):
+				self.Calls.append(phonecall.Phonecall(record['fields'], record['uid'], record['handle']))
+			if record['dbid'] == find_key(self.databases, 'SMS Messages'):
+				self.SMSs.append(sms.SMS(record['fields'], record['uid'], record['handle']))
+			if record['dbid'] == find_key(self.databases, 'Messages'):
+				self.Messages.append(message.Message(record['fields'], record['uid'], record['handle']))
+
+			#display a nifty progress bar, if they ask for it
+			if options.progress:
+				pbar.render(int(file.tell() / filesize * 100), "\nDatabase: %s" % (databases[record['dbid']]))

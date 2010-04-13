@@ -12,7 +12,10 @@ from optparse import OptionParser
 from models import addressbook, sms, phonecall, message
 
 def find_key(dic, val):
-	return [k for k, v in dic.iteritems() if v == val][0]
+	try:
+		return [k for k, v in dic.iteritems() if v == val][0]
+	except IndexError:
+		return False
 
 def print_hex(str):
 	hexd = ''

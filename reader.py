@@ -10,13 +10,6 @@ import os.path
 import time
 from models import addressbook, sms, phonecall, message
 
-import pymongo
-
-conn = pymongo.Connection()
-db = conn.pyipd
-sms_collection = db.sms
-sms_collection.ensure_index('uid', unique=True, drop_dups=True)
-
 def find_key(dic, val):
 	try:
 		return [k for k, v in dic.iteritems() if v == val][0]

@@ -53,7 +53,7 @@ class Reader(object):
 			namelen = struct.unpack("h", file.read(2))
 			self.databases[i] = file.read(namelen[0])[:-1]
 
-		self.records = ()
+		self.records = []
 		self.SMSs = []
 		self.Calls = []
 		self.ABooks = []
@@ -68,13 +68,13 @@ class Reader(object):
 			file.seek(1,1)
 			record['handle'] = struct.unpack("H", file.read(2))[0]
 			record['uid'] = struct.unpack("L", file.read(4))[0]
-			record['fields'] = ()
+			record['fields'] = []
 			while file.tell() < (temptell + rlength) and file.tell() < filesize:
 				field = {}
 				flength = struct.unpack("H", file.read(2))[0]
 				field['type'] = struct.unpack("b", file.read(1))[0]
 				field['data'] = file.read(flength)
-				record['fields'] += ((field),)
+				record['fields'].append(field)
 
 				if record['dbid'] == find_key(self.databases, 'Address Book - All') and field['type'] == 10:
 					#luckily, this is the only field type we're concerned with
@@ -84,7 +84,7 @@ class Reader(object):
 			if record['dbid'] == 65535:
 				continue
 
-			self.records += (record,)
+			self.records.append(record)
 			if record['dbid'] == find_key(self.databases, 'Phone Call Logs'):
 				self.Calls.append(phonecall.Phonecall(record['fields'], record['uid'], record['handle']))
 			if record['dbid'] == find_key(self.databases, 'SMS Messages'):

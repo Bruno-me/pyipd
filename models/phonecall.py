@@ -3,16 +3,21 @@
 #Copyright 2010, Logan Rojas
 #License: Simplified BSD
 
+import base
+
 import struct
 from datetime import datetime
 
-class Phonecall(object):
-	def __init__(self, fields, uid, handle):
+class Phonecall(base.IPDRecord):
+	#Possible attributes; I got a couple of calls without a number
+	calltime = None
+	number = None
+	duration = None
+	direction = None
+	disposition = None
 
-		self.uid = uid
-		self.handle = handle
-		self.fields = fields
-		self.decode()
+	def __repr__(self):
+		return u'<Phonecall: Direction: %s, Disposition: %s, Number: %s, Timestamp: %s>' % (self.direction, self.disposition, self.number, self.calltime)
 
 	def decode(self):
 		self.names = []
@@ -23,6 +28,9 @@ class Phonecall(object):
 			if field['type'] == 12:
 				#phone number, includes a null at the end
 				self.number = field['data'][:-1]
+			if field['type'] == 3:
+				#duration (in seconds)
+				self.duration = struct.unpack('L', field['data'])[0]
 			if field['type'] == 31:
 				#name from address book
 				self.names += [field['data'][:-1],]
@@ -30,20 +38,17 @@ class Phonecall(object):
 				#direction
 				direction = ord(field['data'][0])
 				if direction == 0:
-					self.direction = 'in'
+					self.direction = 'In'
 				elif direction == 1:
-					self.direction = 'out'
+					self.direction = 'Out'
 				elif direction == 2:
-					self.direction = 'missed'
+					self.direction = 'Missed'
 				elif direction == 3:
-					self.direction = 'missed'
+					self.direction = 'Missed'
 				elif direction == 4:
-					self.direction = 'conference'
+					self.direction = 'Conference'
 				else:
-					self.direction = 'unknown - %d' % direction
-			if field['type'] == 3:
-				#duration (in seconds)
-				self.duration = struct.unpack('L', field['data'])[0]
+					self.direction = 'Unknown - %d' % direction
 			if field['type'] == 6:
 				#failure code
 				failcode = ord(field['data'][0])
@@ -54,4 +59,4 @@ class Phonecall(object):
 				elif failcode == 9:
 					self.disposition = 'Call Failed'
 				else:
-					self.disposition = 'unknown - %d' % failcode
+					self.disposition = 'Unknown - %d' % failcode

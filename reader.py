@@ -8,7 +8,8 @@ import sys
 import struct
 import os.path
 import time
-from models import addressbook, sms, phonecall, message
+
+import models
 
 def find_key(dic, val):
 	try:
@@ -76,21 +77,19 @@ class Reader(object):
 				field['data'] = file.read(flength)
 				record['fields'].append(field)
 
-				if record['dbid'] == find_key(self.databases, 'Address Book - All') and field['type'] == 10:
-					#luckily, this is the only field type we're concerned with
-					self.ABooks.append(addressbook.ABook(field['data'], record['uid'], record['handle']))
-
 			#orphaned records
 			if record['dbid'] == 65535:
 				continue
 
 			self.records.append(record)
+			if record['dbid'] == find_key(self.databases, 'Address Book - All'):
+				self.ABooks.append(models.addressbook.ABook(record['fields'], record['uid'], record['handle']))
 			if record['dbid'] == find_key(self.databases, 'Phone Call Logs'):
-				self.Calls.append(phonecall.Phonecall(record['fields'], record['uid'], record['handle']))
+				self.Calls.append(models.phonecall.Phonecall(record['fields'], record['uid'], record['handle']))
 			if record['dbid'] == find_key(self.databases, 'SMS Messages'):
-				self.SMSs.append(sms.SMS(record['fields'], record['uid'], record['handle']))
+				self.SMSs.append(models.sms.SMS(record['fields'], record['uid'], record['handle']))
 			if record['dbid'] == find_key(self.databases, 'Messages'):
-				self.Messages.append(message.Message(record['fields'], record['uid'], record['handle']))
+				self.Messages.append(models.message.Message(record['fields'], record['uid'], record['handle']))
 
 			#display a nifty progress bar, if they ask for it
 			if progress:

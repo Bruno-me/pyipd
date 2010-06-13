@@ -3,6 +3,8 @@
 #Copyright 2010, Logan Rojas
 #License: Simplified BSD
 
+import base
+
 import cStringIO
 import struct
 
@@ -45,19 +47,19 @@ fieldtypes = {
 	0x3b: 'categories',
 }
 
-class ABook(object):
-	def __init__(self, data, uid, handle):
-		self.uid = uid
-		self.handle = handle
-		self.data = cStringIO.StringIO(data)
-		self.datalen = len(data)
-		self.decode()
-
+class ABook(base.IPDRecord):
 	def __repr__(self):
 		return u'<ABook: "%s %s">' % (self.first_name, self.last_name)
-	
+
 	def decode(self):
-		"""Read through the data and extract the fields listed above, usually called in __init__()"""
+		"""Pull out the data and decode it using the decodeabook() method"""
+		data = [field['data'] for field in self.fields if field['type'] == 10][0]
+		self.data = cStringIO.StringIO(data)
+		self.datalen = len(data)
+		self.decodeabook()
+
+	def decodeabook(self):
+		"""Read through the data and extract the fields listed above"""
 		#ensure the cursor is at the beginning of the data
 		self.data.seek(0)
 		#First name first

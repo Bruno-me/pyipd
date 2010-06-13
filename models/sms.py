@@ -3,16 +3,12 @@
 #Copyright 2010, Logan Rojas
 #License: Simplified BSD
 
+import base
+
 import struct
 from datetime import datetime
 
-class SMS(object):
-	def __init__(self, fields, uid, handle):
-		self.uid = uid
-		self.handle = handle
-		self.fields = fields
-		self.decode()
-
+class SMS(base.IPDRecord):
 	def decode(self):
 		for field in self.fields:
 			if field['type'] == 1:

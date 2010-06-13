@@ -3,28 +3,28 @@
 #Copyright 2010, Logan Rojas
 #License: Simplified BSD
 
+import base
+
 import struct
 from datetime import datetime
 
-class Message(object):
-	def __init__(self, fields, uid, handle):
-		#Generic data
-		self.uid = uid
-		self.handle = handle
-		self.fields = fields
+class Message(base.IPDRecord):
+	def __repr__(self):
+		return '<Message: "%s">' % self.subject
 
-		#Messages specific things that might appear multiple times
+	def decode(self):
+		#Messages specific things
 		self.to = []
 		self.cc = []
 		self.bcc = []
 		self.attachmentref = []
 		self.attachment = []
-		self.decode()
-
-	def __repr__(self):
-		return '<Message: "%s">' % self.subject
-
-	def decode(self):
+		self.returnpath = None
+		self.fromaddr = None
+		self.replyto = None
+		self.subject = None
+		self.body = None
+		self.bodyhtml = None
 		for field in self.fields:
 			if field['type'] == 1:
 				#To: Header(s), RFC 2822 address '<name> address', separated by a null

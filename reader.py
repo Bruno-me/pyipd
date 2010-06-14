@@ -66,6 +66,7 @@ class Reader(object):
 		self.ABooks = []
 		self.Messages = []
 		self.Memos = []
+		self.BrowserHistory = []
 
 		#Go the the file stopping at each record
 		while file.tell() < (filesize - 1):
@@ -110,6 +111,8 @@ class Reader(object):
 				self.Messages.append(models.message.Message(record))
 			if record['dbid'] == find_key(self.databases, 'Memos'):
 				self.Memos.append(models.memo.Memo(record))
+			if record['dbid'] == find_key(self.databases, 'Browser Urls'):
+				self.BrowserHistory.append(models.browserhistory.BrowserHistory(record))
 
 			#display a nifty progress bar, if they ask for it
 			if progress:

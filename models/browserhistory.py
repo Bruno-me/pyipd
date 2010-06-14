@@ -1,4 +1,4 @@
-"""Handles Memos"""
+"""Handles 'Browser Urls' database, just the url, no timestamp or anything"""
 
 #Copyright 2010, Logan Rojas
 #License: Simplified BSD

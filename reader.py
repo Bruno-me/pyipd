@@ -65,6 +65,7 @@ class Reader(object):
 		self.Calls = []
 		self.ABooks = []
 		self.Messages = []
+		self.Memos = []
 
 		#Go the the file stopping at each record
 		while file.tell() < (filesize - 1):
@@ -107,6 +108,8 @@ class Reader(object):
 				self.SMSs.append(models.sms.SMS(record))
 			if record['dbid'] == find_key(self.databases, 'Messages'):
 				self.Messages.append(models.message.Message(record))
+			if record['dbid'] == find_key(self.databases, 'Memos'):
+				self.Memos.append(models.memo.Memo(record))
 
 			#display a nifty progress bar, if they ask for it
 			if progress:

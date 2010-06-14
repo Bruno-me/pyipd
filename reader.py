@@ -17,12 +17,8 @@ def find_key(dic, val):
 	except IndexError:
 		return False
 
-def print_hex(str):
-	hexd = ''
-	for char in str:
-		hexd += "%#x " % ord(char)
-	return hexd
-
+class IPDFileError(Exception):
+	pass
 
 class Reader(object):
 	"""Makes a Reader object
@@ -41,8 +37,18 @@ class Reader(object):
 			from progressbar import progressbar
 			pbar = progressbar.ProgressBar()
 
-		#data begins 0x28 bytes in
-		file.seek(0x28)
+		identifier = file.read(0x25)
+		if identifier != 'Inter@ctive Pager Backup/Restore File':
+			raise IPDFileError("Doesn't look like a IPD file")
+
+		#seek past a 0x0A
+		file.seek(1,1)
+
+		fileversion = struct.unpack('b', file.read(1))[0]
+		if fileversion != 2:
+			raise IPDFileError('File version not 2, we only know about version 2')
+
+		file.seek(1,1)
 
 		#figure out the number of databases
 		numdb = struct.unpack('h', file.read(2))[0]
@@ -51,8 +57,8 @@ class Reader(object):
 
 		#find database names
 		for i in range(0,numdb):
-			namelen = struct.unpack("h", file.read(2))
-			self.databases[i] = file.read(namelen[0])[:-1]
+			namelen = struct.unpack("h", file.read(2))[0]
+			self.databases[i] = file.read(namelen)[:-1]
 
 		self.records = []
 		self.SMSs = []
@@ -63,17 +69,24 @@ class Reader(object):
 		#Go the the file stopping at each record
 		while file.tell() < (filesize - 1):
 			record = {}
+			#database ID, corresponds to self.databases above
 			record['dbid'] = struct.unpack("H", file.read(2))[0]
+
+			#record length, and the position of the beginning of the record
 			rlength = struct.unpack("L", file.read(4))[0]
-			temptell = file.tell()
-			file.seek(1,1)
+			rbeginning = file.tell()
+
+			#record metadata
+			record['dbversion'] = struct.unpack('B', file.read(1))[0]
 			record['handle'] = struct.unpack("H", file.read(2))[0]
 			record['uid'] = struct.unpack("L", file.read(4))[0]
 			record['fields'] = []
-			while file.tell() < (temptell + rlength) and file.tell() < filesize:
+
+			#loop through the record and read all of the fields
+			while file.tell() < (rbeginning + rlength) and file.tell() < filesize:
 				field = {}
 				flength = struct.unpack("H", file.read(2))[0]
-				field['type'] = struct.unpack("b", file.read(1))[0]
+				field['type'] = struct.unpack("B", file.read(1))[0]
 				field['data'] = file.read(flength)
 				record['fields'].append(field)
 
@@ -82,14 +95,18 @@ class Reader(object):
 				continue
 
 			self.records.append(record)
+
+			#parse out different record types
+			#TODO: replace this will some sort of registration system where you
+			# specify a database name and class to put it into
 			if record['dbid'] == find_key(self.databases, 'Address Book - All'):
-				self.ABooks.append(models.addressbook.ABook(record['fields'], record['uid'], record['handle']))
+				self.ABooks.append(models.addressbook.ABook(record))
 			if record['dbid'] == find_key(self.databases, 'Phone Call Logs'):
-				self.Calls.append(models.phonecall.Phonecall(record['fields'], record['uid'], record['handle']))
+				self.Calls.append(models.phonecall.Phonecall(record))
 			if record['dbid'] == find_key(self.databases, 'SMS Messages'):
-				self.SMSs.append(models.sms.SMS(record['fields'], record['uid'], record['handle']))
+				self.SMSs.append(models.sms.SMS(record))
 			if record['dbid'] == find_key(self.databases, 'Messages'):
-				self.Messages.append(models.message.Message(record['fields'], record['uid'], record['handle']))
+				self.Messages.append(models.message.Message(record))
 
 			#display a nifty progress bar, if they ask for it
 			if progress:

@@ -4,14 +4,11 @@
 #License: Simplified BSD
 
 class IPDRecord(object):
-	uid = None
-	handle = None
-	Fields = None
-
-	def __init__(self, fields, uid, handle):
-		self.uid = uid
-		self.handle = handle
-		self.fields = fields
+	def __init__(self, record):
+		self.record = record
+		self.uid = record['uid']
+		self.handle = record['handle']
+		self.fields = record['fields']
 		self.decode()
 
 	def __repr__(self):

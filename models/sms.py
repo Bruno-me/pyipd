@@ -9,6 +9,9 @@ import struct
 from datetime import datetime
 
 class SMS(base.IPDRecord):
+	def __repr__(self):
+		return u'<SMS Message: Direction: %s, Number: %s, Sent: %s Text: %s>' % (self.direction, self.number, self.sent, self.text)
+
 	def decode(self):
 		for field in self.fields:
 			if field['type'] == 1:

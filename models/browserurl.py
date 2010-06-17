@@ -8,9 +8,9 @@ import base
 import struct
 from datetime import datetime
 
-class BrowserHistory(base.IPDRecord):
+class BrowserURL(base.IPDRecord):
 	def __repr__(self):
-		return u'<BrowserHistory: %s>' % (self.url)
+		return u'<BrowserURL: %s>' % (self.url)
 
 	def decode(self):
 		for field in self.fields:

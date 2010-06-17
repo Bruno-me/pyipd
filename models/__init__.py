@@ -3,7 +3,7 @@ import message
 import phonecall
 import sms
 import memo
-import browserhistory
+import browserurl
 
 def find_key(dic, val):
 	try:
@@ -14,6 +14,6 @@ def find_key(dic, val):
 def dbid2dbclass(databases):
 	dbrelations = {}
 	#TODO: make this magic
-	for mod in [addressbook, message, phonecall, sms, memo, browserhistory]:
+	for mod in [addressbook, message, phonecall, sms, memo, browserurl]:
 		dbrelations[find_key(databases, mod.DBRELATION[0])] = mod.DBRELATION[1]
 	return dbrelations

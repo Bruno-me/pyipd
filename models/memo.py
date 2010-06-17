@@ -20,3 +20,5 @@ class Memo(base.IPDRecord):
 			elif field['type'] == 2:
 				#memo contents with null at the end
 				self.text = field['data'][:-1]
+
+DBRELATION = ('Memos', Memo)

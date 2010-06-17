@@ -17,3 +17,5 @@ class BrowserHistory(base.IPDRecord):
 			if field['type'] == 25:
 				#memo contents with null at the end
 				self.url = field['data'][3:]
+
+DBRELATION = ('Browser Urls', BrowserHistory)

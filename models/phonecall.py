@@ -60,3 +60,5 @@ class Phonecall(base.IPDRecord):
 					self.disposition = 'Call Failed'
 				else:
 					self.disposition = 'Unknown - %d' % failcode
+
+DBRELATION = ('Phone Call Logs', Phonecall)

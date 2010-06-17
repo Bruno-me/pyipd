@@ -11,12 +11,6 @@ import time
 
 import models
 
-def find_key(dic, val):
-	try:
-		return [k for k, v in dic.iteritems() if v == val][0]
-	except IndexError:
-		return False
-
 class IPDFileError(Exception):
 	pass
 
@@ -60,13 +54,9 @@ class Reader(object):
 			namelen = struct.unpack("h", file.read(2))[0]
 			self.databases[i] = file.read(namelen)[:-1]
 
+		dbrelations = models.dbid2dbclass(self.databases)
+
 		self.records = []
-		self.SMSs = []
-		self.Calls = []
-		self.ABooks = []
-		self.Messages = []
-		self.Memos = []
-		self.BrowserHistory = []
 
 		#Go the the file stopping at each record
 		while file.tell() < (filesize - 1):
@@ -93,26 +83,24 @@ class Reader(object):
 				record['fields'].append(field)
 
 			#orphaned records
-			if record['dbid'] == 65535:
+			if record['dbid'] not in self.databases:
 				continue
 
+			#append record to record list
+			# perhaps make this optional, for speed
 			self.records.append(record)
 
-			#parse out different record types
-			#TODO: replace this will some sort of registration system where you
-			# specify a database name and class to put it into
-			if record['dbid'] == find_key(self.databases, 'Address Book - All'):
-				self.ABooks.append(models.addressbook.ABook(record))
-			if record['dbid'] == find_key(self.databases, 'Phone Call Logs'):
-				self.Calls.append(models.phonecall.Phonecall(record))
-			if record['dbid'] == find_key(self.databases, 'SMS Messages'):
-				self.SMSs.append(models.sms.SMS(record))
-			if record['dbid'] == find_key(self.databases, 'Messages'):
-				self.Messages.append(models.message.Message(record))
-			if record['dbid'] == find_key(self.databases, 'Memos'):
-				self.Memos.append(models.memo.Memo(record))
-			if record['dbid'] == find_key(self.databases, 'Browser Urls'):
-				self.BrowserHistory.append(models.browserhistory.BrowserHistory(record))
+			#magic to parse out records and automatically add them to appropriately named lists
+			try:
+				recordclass = dbrelations[record['dbid']]
+				recordlistname = recordclass.__name__ + 's'
+				recordlist = getattr(self, recordlistname, [])
+				recordlist.append(recordclass(record))
+				if not hasattr(self, recordlistname):
+					setattr(self, recordlistname, recordlist)
+			except KeyError:
+				#dbrelations doesn't have the dbid
+				pass
 
 			#display a nifty progress bar, if they ask for it
 			if progress:

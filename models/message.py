@@ -59,3 +59,5 @@ class Message(base.IPDRecord):
 			if field['type'] == 25:
 				#attachment data, plus garbage
 				self.attachment.append(field['data'])
+
+DBRELATION = ('Messages', Message)

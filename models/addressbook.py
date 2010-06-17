@@ -95,3 +95,5 @@ class ABook(base.IPDRecord):
 			data = self.data.read(length)[:-1]
 			if field in fieldtypes:
 				setattr(self, fieldtypes[field], data)
+
+DBRELATION = ('Address Book - All', ABook)

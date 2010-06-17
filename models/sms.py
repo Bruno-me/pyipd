@@ -30,3 +30,5 @@ class SMS(base.IPDRecord):
 					self.direction = 'out'
 				else:
 					self.direction = 'in'
+
+DBRELATION = ('SMS Messages', SMS)

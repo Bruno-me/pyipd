@@ -25,16 +25,16 @@ class Phonecall(base.IPDRecord):
 			if field['type'] == 4:
 				#timestamp, similar to SMS
 				self.calltime = datetime.fromtimestamp(struct.unpack('Q', field['data'])[0] / 1000)
-			if field['type'] == 12:
+			elif field['type'] == 12:
 				#phone number, includes a null at the end
 				self.number = field['data'][:-1]
-			if field['type'] == 3:
+			elif field['type'] == 3:
 				#duration (in seconds)
 				self.duration = struct.unpack('L', field['data'])[0]
-			if field['type'] == 31:
+			elif field['type'] == 31:
 				#name from address book
 				self.names += [field['data'][:-1],]
-			if field['type'] == 2:
+			elif field['type'] == 2:
 				#direction
 				direction = ord(field['data'][0])
 				if direction == 0:
@@ -49,7 +49,7 @@ class Phonecall(base.IPDRecord):
 					self.direction = 'Conference'
 				else:
 					self.direction = 'Unknown - %d' % direction
-			if field['type'] == 6:
+			elif field['type'] == 6:
 				#failure code
 				failcode = ord(field['data'][0])
 				if failcode == 0:

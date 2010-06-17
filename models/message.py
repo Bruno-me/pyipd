@@ -29,34 +29,34 @@ class Message(base.IPDRecord):
 			if field['type'] == 1:
 				#To: Header(s), RFC 2822 address '<name> address', separated by a null
 				self.to.append(field['data'][8:-1].strip("\x00").split("\x00"))
-			if field['type'] == 2:
+			elif field['type'] == 2:
 				#CC: Header(s)
 				self.cc.append(field['data'][8:-1].strip("\x00").split("\x00"))
-			if field['type'] == 3:
+			elif field['type'] == 3:
 				#BCC: Header(s)
 				self.bcc.append(field['data'][8:-1].strip("\x00").split("\x00"))
-			if field['type'] == 4:
+			elif field['type'] == 4:
 				#Return-Path: header
 				self.returnpath = field['data'][8:-1].strip("\x00").split("\x00")
-			if field['type'] == 5:
+			elif field['type'] == 5:
 				#From: header
 				self.fromaddr = field['data'][8:-1].strip("\x00").split("\x00")
-			if field['type'] == 6:
+			elif field['type'] == 6:
 				#Reply-To: header
 				self.replyto = field['data'][8:-1].strip("\x00").split("\x00")
-			if field['type'] == 11:
+			elif field['type'] == 11:
 				#subject, with null at the end
 				self.subject = field['data'][:-1]
-			if field['type'] == 12:
+			elif field['type'] == 12:
 				#plaintext body of the message
 				self.body = field['data'].strip("\x00")
-			if field['type'] == 24:
+			elif field['type'] == 24:
 				#HTML body of message, with garbage at the beginning
 				self.bodyhtml = field['data'][97:]
-			if field['type'] == 22:
+			elif field['type'] == 22:
 				#attachment reference, this really isn't of much use
 				self.attachmentref.append(field['data'])
-			if field['type'] == 25:
+			elif field['type'] == 25:
 				#attachment data, plus garbage
 				self.attachment.append(field['data'])
 

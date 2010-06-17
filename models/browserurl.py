@@ -18,4 +18,4 @@ class BrowserURL(base.IPDRecord):
 				#memo contents with null at the end
 				self.url = field['data'][3:]
 
-DBRELATION = ('Browser Urls', BrowserHistory)
+DBRELATION = ('Browser Urls', BrowserURL)

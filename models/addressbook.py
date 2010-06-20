@@ -53,7 +53,10 @@ class ABook(base.IPDRecord):
 
 	def decode(self):
 		"""Pull out the data and decode it using the decodeabook() method"""
-		data = [field['data'] for field in self.fields if field['type'] == 10][0]
+		try:
+			data = [field['data'] for field in self.fields if field['type'] == 10][0]
+		except IndexError:
+			return False
 		self.data = cStringIO.StringIO(data)
 		self.datalen = len(data)
 		self.decodeabook()
@@ -96,4 +99,40 @@ class ABook(base.IPDRecord):
 			if field in fieldtypes:
 				setattr(self, fieldtypes[field], data)
 
-DBRELATION = ('Address Book - All', ABook)
+class OldABook(base.IPDRecord):
+	"""Address book format for pre-os 4.5 (?)"""
+	def __repr__(self):
+		return u'<OldABook: "%s">' % ' '.join(self.names)
+
+	def decode(self):
+		self.names = []
+		for field in self.fields:
+			if field['type'] == 32:
+				self.names.append(field['data'][:-1])
+			if field['type'] == 6:
+				self.work = field['data'][:-1]
+			if field['type'] == 7:
+				self.home = field['data'][:-1]
+			if field['type'] == 8:
+				self.mobile = field['data'][:-1]
+			if field['type'] == 33:
+				self.company = field['data'][:-1]
+			if field['type'] == 1:
+				self.email = field['data'][:-1]
+			if field['type'] == 42:
+				self.title = field['data'][:-1]
+			if field['type'] == 61:
+				self.home_address_1 = field['data'][:-1]
+			if field['type'] == 69:
+				self.home_city = field['data'][:-1]
+			if field['type'] == 70:
+				self.home_state = field['data'][:-1]
+			if field['type'] == 71:
+				self.home_zip = field['data'][:-1]
+			if field['type'] == 54:
+				self.web_site = field['data'][:-1]
+
+DBRELATIONS = [
+	('Address Book - All', ABook),
+	('Address Book', OldABook),
+]

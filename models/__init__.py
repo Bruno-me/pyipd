@@ -1,19 +1,33 @@
-import addressbook
-import message
-import phonecall
-import sms
-import memo
-import browserurl
+import os
+import re
+import sys
 
-def find_key(dic, val):
-	try:
-		return [k for k, v in dic.iteritems() if v == val][0]
-	except IndexError:
-		return False
+def find_keys(dic, val):
+	return [k for k, v in dic.iteritems() if v == val]
 
 def dbid2dbclass(databases):
 	dbrelations = {}
-	#TODO: make this magic
-	for mod in [addressbook, message, phonecall, sms, memo, browserurl]:
-		dbrelations[find_key(databases, mod.DBRELATION[0])] = mod.DBRELATION[1]
+	for mod in modules:
+		try:
+			for relation in mod.DBRELATIONS:
+				keys = find_keys(databases, relation[0])
+				for key in keys:
+					dbrelations[key] = relation[1]
+		except AttributeError:
+			#base.py probably
+			pass
 	return dbrelations
+
+try:
+	os.chdir('models')
+except:
+	#I know this is bad practice, sue me
+	print "aaaaaaaaaa, couldn't chdir to models"
+else:
+	files = os.listdir('.')
+	damnregex = re.compile('.*(?<!__init__)\.py$')
+	files = filter(damnregex.search, files)
+	filenameToModuleName = lambda f: os.path.splitext(f)[0]
+	moduleNames = map(filenameToModuleName, files)
+	modules = map(__import__, moduleNames)
+	os.chdir('..')

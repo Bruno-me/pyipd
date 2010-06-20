@@ -21,4 +21,6 @@ class Memo(base.IPDRecord):
 				#memo contents with null at the end
 				self.text = field['data'][:-1]
 
-DBRELATION = ('Memos', Memo)
+DBRELATIONS = [
+	('Memos', Memo),
+]

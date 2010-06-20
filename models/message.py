@@ -60,4 +60,6 @@ class Message(base.IPDRecord):
 				#attachment data, plus garbage
 				self.attachment.append(field['data'])
 
-DBRELATION = ('Messages', Message)
+DBRELATIONS = [
+	('Messages', Message),
+]
